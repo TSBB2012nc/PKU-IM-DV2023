@@ -11,7 +11,7 @@ document.addEventListener("mousemove", function (event) {
     if (event.clientX > window.innerWidth - 200 && event.clientY < window.innerHeight - 300) {
         sidebar.style.right = "0";
     } else {
-        sidebar.style.right = "-200px";
+        sidebar.style.right = "-300px";
     }
 });
 

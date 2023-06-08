@@ -263,8 +263,8 @@ const time_svg = d3.select("#main")
     .append("svg")
     .attr('width', 0.9 * getWindowWidth())
     .attr('height', 0.18 * getWindowHeight())
-    // .style("background-color", "red")
-    .style("margin-left", 0.05 * getWindowWidth());
+    .style("margin-left", 0.05 * getWindowWidth())
+    .style("z-index", 99);
 const time_width = time_svg.attr("width");
 const time_height = time_svg.attr("height");
 
