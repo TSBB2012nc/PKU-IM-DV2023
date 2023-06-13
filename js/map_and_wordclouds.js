@@ -213,6 +213,7 @@ function draw_map(start_year, end_year) {
         //显示得过诺奖的机构位置
         const circles = map_svg.selectAll('circle')
             .data(ins_count)
+            .join("circle")
             .attr("class", "point")
             .attr("cx", function (d) {
                 if (coor(d)[0] == NaN) console.log(d);
@@ -243,7 +244,7 @@ function draw_map(start_year, end_year) {
 
         var zoom = d3.zoom()
             .extent([[0, 0], [648, 480]]) //平移范围
-            .scaleExtent([0.4, 1.2]) //缩放大小倍数
+            .scaleExtent([0.2,2.5]) //缩放大小倍数
             .on("zoom", zoomed);
 
         map_svg.call(zoom);
