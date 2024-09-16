@@ -15,24 +15,6 @@ document.addEventListener("mousemove", function (event) {
     }
 });
 
-// page slider
-var currentPageIndex = 1;
-var pages = document.getElementsByClassName("page");
-
-function showPage(pageIndex) {
-    // 隐藏当前页面
-    var currentPage = document.getElementById("page" + currentPageIndex);
-    currentPage.classList.remove("active");
-
-    // 显示指定页面
-    var nextPage = document.getElementById("page" + pageIndex);
-    nextPage.classList.add("active");
-
-    currentPageIndex = pageIndex;
-}
-
-// 初始显示第一页
-showPage(currentPageIndex);
 
 
 // radius

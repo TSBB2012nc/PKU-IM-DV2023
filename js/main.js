@@ -1,14 +1,44 @@
+// 默认展示第一页
 showPage1();
+
+
+function addLogo() {
+    d3.select("#page").append("div").attr("class", "title").attr("id", "title").append("svg").append("use").attr("xlink:href", "#nobel-logo")
+}
 
 
 function addHeader(title) {
     d3.select("#page").append("div").attr("class", "header").append('h1').text(title);
 }
+
+function newPage() {
+    // 清空画布
+    d3.select("#page").selectAll("*").remove();
+}
+
+// 获取画布的大小
+function getWindowWidth() {
+    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+}
+function getWindowHeight() {
+    return window.innerHeight || document.documentElement.clientHeight || document.body.clientWidth
+}
+
+WIDTH = getWindowWidth();
+HEIGHT = getWindowHeight();
+
+
 function showPage1() {
+    // 清空画布
+    newPage();
+    addLogo();
+    // TODO: 调整标题位置
+    d3.select("#title").append("p").text("A Century of Nobel Prize");
     // add author info
     d3.select("#page").append("div").attr("class", "footer").text("Data Visualization, 2023 Spring, Liang Hu, Jiaqi Lei, Haoyang Wang, Xin He")
-
     // draw
+    d3.select("#page").append("div").attr("id", "globeViz")
+    // TODO: 增加交互
     // load data
     data = d3.csv("data/dots.csv").then((result) => {
         const gData = result.map((x) => ({
@@ -19,11 +49,12 @@ function showPage1() {
             repeatPeriod: 3000
         }));
 
+
         const colorInterpolator = t => `rgba(218,165,32,${Math.sqrt(1 - t)})`;  // 颜色渐变：金色，随时间变浅
         // globe 对象
         const globe = Globe()
             .globeImageUrl('earth-night.jpg')  // 地球仪背景图（需要开启live server）
-            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+            .backgroundImageUrl('./img/night-sky.png')
             .ringsData(gData)
             .ringColor(() => colorInterpolator)
             .ringMaxRadius('maxR')
@@ -34,28 +65,28 @@ function showPage1() {
         globe.controls().autoRotateSpeed = 0.85;
     });
 
-
 }
 
+
 function showPage2() {
-    addTitle;
+    // TODO: 优化地图，台湾+藏南地区
+    // TODO: 进度条拖动美化
+    // TODO: 词云视差美化
+    newPage();
+    addLogo();
+    // move logo
+    d3.select("div.title").attr("style", "top:5%;right:10%;left: auto;height: 100rem;")
     addHeader('The Shifting Landscape: Laureate and Themes');
 
-    // 获取画布的大小
-    function getWindowWidth() {
-        return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
-    }
-    function getWindowHeight() {
-        return window.innerHeight || document.documentElement.clientHeight || document.body.clientWidth
-    }
+
 
     d3.select("#page").append("div").attr("id", "main");
     //添加绘制地图的svg
     const margin = { top: 60, bottom: 60, left: 60, right: 60 }
     const map_svg = d3.select("#main")
         .append("svg")
-        .attr('width', 0.6 * getWindowWidth())
-        .attr('height', 0.8 * getWindowHeight())
+        .attr('width', 0.6 * WIDTH)
+        .attr('height', 0.8 * HEIGHT)
     // .style("background-color", "green");
     const map_width = map_svg.attr("width")
     const map_height = map_svg.attr("height")
@@ -599,12 +630,11 @@ function showPage2() {
 
 
 function showPage3() {
+    newPage();
     addHeader("Reward of Diligency: Length and Intervals to Achieve Nobel Prize");
 
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const blockWidth = width / 3 - 10;
-    const blockHeight = height;
+    const blockWidth = WIDTH / 3 - 10;
+    const blockHeight = HEIGHT * 0.95;
 
     var tooltip = d3.select("body")
         .append("div")
@@ -618,31 +648,41 @@ function showPage3() {
     var tooltipStudy = tooltip.append("p").attr("class", "laureate study");
     var tooltipGap = tooltip.append("p").attr("class", "laureate gap");
 
+    // TODO: 不扩展窗口大小的自适应
+    function drawBlock(blockId, blockCategory, blockData, blockText) {
+        var block = d3.select("#page").append("div").attr("class", "block").attr("id", "block"+blockId);
+        block.append("span").attr("class", "subject").text(blockText);
+        block.append("svg").attr("id", blockCategory).attr("height", 0).attr("width", 0).attr("class", "graph").on("mouseover", "hoverBlock(0)").on("mouseover", "clearAnimation()");
+        
+         // resizing the svg
+        var svg = d3.select("#"+blockCategory);
+        svg.attr("width", blockWidth);
+        svg.attr("height", blockHeight);
 
-    // Chemistry
-    var block1 = d3.select("#Page").append("div").attr("class", "block").attr("id", "block1");
-    block1.append("span").attr("class", "subject").text("CHEMISTRY");
-    block1.append("svg").attr("id", 'ch').attr("height", 0).attr("width", 0).attr("class", "graph").mouseOn("hoverBlock(0)").mouseOver("clearAnimation()")
+        const r = 35;
+        const centerX = blockWidth / 2
+        const centerY = blockHeight / 2
 
-
-    // resizing the svg
-    var svg = document.getElementById("ch");
-    svg.setAttribute("width", blockWidth);
-    svg.setAttribute("height", blockHeight);
-
-    // current svg settings
-    const svg1 = d3.select("#ch");
-    const r = 35;
-    const centerX_CH = blockWidth / 2
-    const centerY_CH = blockHeight / 2
-
-    // add central Nobel image
-    svg1.append("image")
-        .attr("xlink:href", "nobel.png") // 图像文件路径
-        .attr("x", centerX_CH - r)
-        .attr("y", centerY_CH - r)
+        
+        // add central Nobel image
+        svg.append("image")
+        .attr("xlink:href", "nobel.png") 
+        .attr("x", centerX - r)
+        .attr("y", centerY - r)
         .attr("width", 2 * r)
         .attr("height", 2 * r);
+
+        
+
+    
+    }
+
+    drawBlock(1, "ch", "", "CHEMISTRY")
+
+    // Chemistry
+   
+
+
 
     // read csv file
     d3.csv("data/ch_year.csv").then(function (data) {
@@ -733,7 +773,7 @@ function showPage3() {
     });
 
 
-    d3.select('#page').append('svg').attr('id', "legend").attr("width", 450).attr()
+    d3.select('#page').append("div").attr("class", "legend").append('svg').attr('id', "legend").attr("width", 450)
 
 
 
@@ -742,6 +782,9 @@ function showPage3() {
 
 
 function showPage5() {
+    // 清空画布
+    d3.select("#page").selectAll("*").remove();
+
     var ending = d3.select("#page").append("div").attr("class", "ending")
     ending.append("p").attr("class", "end").text("A hundred vessels contend, a thousand sails compete,")
     .append("p").attr("class", "end").text("as mankind's ceaseless march towards truth knows no retreat.")
