@@ -158,20 +158,8 @@ p.laureate {
     width: 100%;
 }
 
-.circle-ch {
-    fill: rgba(230, 139, 184, 0.8);
-    stroke: none;
-}
 
-.circle-ph {
-    fill: rgba(78, 142, 103, 0.8);
-    stroke: none;
-}
 
-.circle-me {
-    fill: rgba(116, 153, 220, 0.8);
-    stroke: none;
-}
 
 .subject {
     color: var(--nobel-gold);
@@ -226,7 +214,7 @@ p.laureate {
 div.ending {
     position: absolute;
     top: 40%;
-    width: 100%;
+    width: 100%;    
 }
 
 p.end {
@@ -297,4 +285,12 @@ p.end {
     width: 100%;
 
     height: 100px;
+}
+
+div#block2 {
+    animation-delay: 1s;
+}
+
+div#block3 {
+    animation-delay: 2s;
 }

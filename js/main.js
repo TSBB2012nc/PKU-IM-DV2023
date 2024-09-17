@@ -648,14 +648,16 @@ function showPage3() {
     var tooltipStudy = tooltip.append("p").attr("class", "laureate study");
     var tooltipGap = tooltip.append("p").attr("class", "laureate gap");
 
+    d3.select("#page").append("div").attr("class", "container").attr("id", "container");
+
     // TODO: 不扩展窗口大小的自适应
-    function drawBlock(blockId, blockCategory, blockData, blockText) {
-        var block = d3.select("#page").append("div").attr("class", "block").attr("id", "block"+blockId);
+    function drawBlock(blockId, blockCategory, blockData, blockText, color) {
+        var block = d3.select("#container").append("div").attr("class", "block").attr("id", "block" + blockId);
         block.append("span").attr("class", "subject").text(blockText);
         block.append("svg").attr("id", blockCategory).attr("height", 0).attr("width", 0).attr("class", "graph").on("mouseover", "hoverBlock(0)").on("mouseover", "clearAnimation()");
-        
-         // resizing the svg
-        var svg = d3.select("#"+blockCategory);
+
+        // resizing the svg
+        var svg = d3.select("#" + blockCategory);
         svg.attr("width", blockWidth);
         svg.attr("height", blockHeight);
 
@@ -663,116 +665,106 @@ function showPage3() {
         const centerX = blockWidth / 2
         const centerY = blockHeight / 2
 
-        
+
         // add central Nobel image
-        svg.append("image")
-        .attr("xlink:href", "nobel.png") 
-        .attr("x", centerX - r)
-        .attr("y", centerY - r)
-        .attr("width", 2 * r)
-        .attr("height", 2 * r);
+        svg.append("image").attr("xlink:href", "nobel.png").attr("x", centerX - r).attr("y", centerY - r).attr("width", 2 * r).attr("height", 2 * r);
 
-        
+        // read data and draw lines
+        d3.csv("data/" + blockData).then(function (data) {
+            const lineLengths = data.map(x => Number(x.study_year))
+            const circleRadii = data.map(x => Number(x.award_gap))
+            const nobelname = data.map(x => x.LaureateName0)
 
-    
+            const lineCount = data.length;
+
+            // 定义比例尺
+            const scale1 = d3.scaleLinear()
+                .domain([1, 112])
+                .range([45, centerX - r]);
+
+            const scale2 = d3.scaleLinear()
+                .domain([1, 56])
+                .range([1, 8]);
+
+            // 线段
+            const lines = svg.selectAll("line")
+                .data(lineLengths)
+                .enter()
+                .append("line")
+                .attr("x1", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    return centerX + r * Math.cos(angle);
+                })
+                .attr("y1", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    return centerY + r * Math.sin(angle);
+                })
+                .attr("x2", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    const lineLength = scale1(d);
+                    return centerX + (lineLength) * Math.cos(angle);
+                })
+                .attr("y2", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    const lineLength = scale1(d);
+                    return centerY + (lineLength) * Math.sin(angle);
+                })
+                .attr("stroke", color);
+
+            // 绘制连接线段的圆，并设置半径为 z 值
+            const circles = svg.selectAll("circle")
+                .data(circleRadii)
+                .enter()
+                .append("circle")
+                .attr("index", (d, i) => i)
+                .attr("cx", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    const lineLength = scale1(lineLengths[i]); // 应用线段长度的比例尺
+                    return centerX + (lineLength) * Math.cos(angle);
+                })
+                .attr("cy", (d, i) => {
+                    const angle = (2 * Math.PI * i) / lineCount;
+                    const lineLength = scale1(lineLengths[i]); // 应用线段长度的比例尺
+                    return centerY + (lineLength) * Math.sin(angle);
+                })
+                .attr("r", d => scale2(d)) // 设置圆的半径为 z 值
+                .attr('fill', color)
+                .attr("data_length", (d, i) => lineLengths[i])
+                .attr("data_gap", (d) => d)
+                .style("opacity", 0.5) // 初始时将圆的透明度设为0.5，隐藏标签
+                // 设置浮窗
+                .on("mouseover", function () {
+                    i = d3.select(this).attr("index");
+                    // 更改透明度
+                    d3.select(this).style("opacity", 1)
+                    var study_year = d3.select(this).attr("data_length");
+                    var award_gap = d3.select(this).attr("data_gap");
+                    // 更新浮窗内容和位置
+                    tooltipAvatar.attr("src", data[i].photo_link);
+                    tooltipName.text(data[i].LaureateName0);
+                    tooltipPrizeYear.text("Prize Year: " + data[i].prize_year);
+                    tooltipStudy.text("Length of Study: " + data[i].study_year);
+                    tooltipGap.text("Years to be Awarded: " + data[i].award_gap);
+                    tooltip.style("visibility", "visible")
+                        .style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    d3.select(this)
+                        .style("opacity", 0.5); // 鼠标离开时将圆的透明度设为0，隐藏标签
+                    tooltipAvatar.attr("src", "");
+                    tooltip.style("visibility", "hidden");
+                })
+        });
+
+
     }
 
-    drawBlock(1, "ch", "", "CHEMISTRY")
+    drawBlock(1, "ch", "ch_year.csv", "CHEMISTRY", "rgba(230, 139, 184, 0.8)");
+    drawBlock(2, "ph", "ph_year.csv", "PHYSICS", "rgba(78, 142, 103, 0.8)");
+    drawBlock(3, "me", "me_year.csv", "MEDICINE", "rgba(116, 153, 220, 0.8)");
 
-    // Chemistry
-   
-
-
-
-    // read csv file
-    d3.csv("data/ch_year.csv").then(function (data) {
-        const lineLengths = data.map(x => Number(x.study_year))
-        const circleRadii = data.map(x => Number(x.award_gap))
-        const nobelname = data.map(x => x.LaureateName0)
-
-        const lineCount = data.length;
-
-        // 定义比例尺
-        const scale1 = d3.scaleLinear()
-            .domain([1, 112])
-            .range([45, centerX_CH - r]);
-
-        const scale2 = d3.scaleLinear()
-            .domain([1, 56])
-            .range([1, 8]);
-
-        // 线段
-        const lines = svg1.selectAll("line")
-            .data(lineLengths)
-            .enter()
-            .append("line")
-            .attr("x1", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                return centerX_CH + r * Math.cos(angle);
-            })
-            .attr("y1", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                return centerY_CH + r * Math.sin(angle);
-            })
-            .attr("x2", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                const lineLength = scale1(d);
-                return centerX_CH + (lineLength) * Math.cos(angle);
-            })
-            .attr("y2", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                const lineLength = scale1(d);
-                return centerY_CH + (lineLength) * Math.sin(angle);
-            })
-            .attr("stroke", "rgba(230, 139, 184, 0.8)");
-
-        // 绘制连接线段的圆，并设置半径为 z 值
-        const circles = svg1.selectAll("circle")
-            .data(circleRadii)
-            .enter()
-            .append("circle")
-            .attr("index", (d, i) => i)
-            .attr("cx", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                const lineLength = scale1(lineLengths[i]); // 应用线段长度的比例尺
-                return centerX_CH + (lineLength) * Math.cos(angle);
-            })
-            .attr("cy", (d, i) => {
-                const angle = (2 * Math.PI * i) / lineCount;
-                const lineLength = scale1(lineLengths[i]); // 应用线段长度的比例尺
-                return centerY_CH + (lineLength) * Math.sin(angle);
-            })
-            .attr("r", d => scale2(d)) // 设置圆的半径为 z 值
-            .attr("class", "circle-ch")
-            .attr("data_length", (d, i) => lineLengths[i])
-            .attr("data_gap", (d) => d)
-            .style("opacity", 0.5) // 初始时将圆的透明度设为0.5，隐藏标签
-            // 设置浮窗
-            .on("mouseover", function () {
-                i = d3.select(this).attr("index");
-                // 更改透明度
-                d3.select(this).style("opacity", 1)
-                var study_year = d3.select(this).attr("data_length");
-                var award_gap = d3.select(this).attr("data_gap");
-                // 更新浮窗内容和位置
-                tooltipAvatar.attr("src", data[i].photo_link);
-                tooltipName.text(data[i].LaureateName0);
-                tooltipPrizeYear.text("Prize Year: " + data[i].prize_year);
-                tooltipStudy.text("Length of Study: " + data[i].study_year);
-                tooltipGap.text("Years to be Awarded: " + data[i].award_gap);
-                tooltip.style("visibility", "visible")
-                    .style("top", (event.pageY - 10) + "px")
-                    .style("left", (event.pageX + 10) + "px");
-            })
-            .on("mouseout", function () {
-                d3.select(this)
-                    .style("opacity", 0.5); // 鼠标离开时将圆的透明度设为0，隐藏标签
-                tooltipAvatar.attr("src", "");
-                tooltip.style("visibility", "hidden");
-            })
-    });
-
-
+    // TODO: add legend
     d3.select('#page').append("div").attr("class", "legend").append('svg').attr('id', "legend").attr("width", 450)
 
 
@@ -781,47 +773,59 @@ function showPage3() {
 }
 
 
+function showPage4() {
+    // 清空画布
+    newPage();
+    addLogo();
+
+    addHeader('Aiming at One: Collaborative Bonds Among Nobel Laureates');
+
+    d3.select("#page").append("iframe").attr("src", "./network/triple_colab.html").attr("style", "width:100%; height: 100%;")
+}
+
+
 function showPage5() {
     // 清空画布
-    d3.select("#page").selectAll("*").remove();
-
-    var ending = d3.select("#page").append("div").attr("class", "ending")
+    newPage();
+    // TODO: 渐入渐出动画
+    var ending = d3.select("#page").append("div").attr("class", "ending");
     ending.append("p").attr("class", "end").text("A hundred vessels contend, a thousand sails compete,")
-    .append("p").attr("class", "end").text("as mankind's ceaseless march towards truth knows no retreat.")
-    .append("p").attr("class", "end").text("The history of Nobel yet unfolds, with tales yet to be complete.")
+        .append("p").attr("class", "end").text("as mankind's ceaseless march towards truth knows no retreat.")
+        .append("p").attr("class", "end").text("The history of Nobel yet unfolds, with tales yet to be complete.");
+
 }
 
 
 
 function hoverBlock(index) {
     var blocks = document.getElementsByClassName("graph");
-    
+
     // 添加活动样式
     blocks[index].classList.add("active");
-    
+
     // 移除非活动样式
     for (var i = 0; i < blocks.length; i++) {
-      if (i !== index) {
-        blocks[i].classList.add("inactive");
-        blocks[i].classList.remove("active");
-      }
+        if (i !== index) {
+            blocks[i].classList.add("inactive");
+            blocks[i].classList.remove("active");
+        }
     }
-    
+
     // 根据索引应用相应的移动样式
     if (index === 0) {
-      blocks[index].classList.add("move-left");
-      blocks[index+1].classList.add("move-center");
-      blocks[index+2].classList.add("move-right");
+        blocks[index].classList.add("move-left");
+        blocks[index + 1].classList.add("move-center");
+        blocks[index + 2].classList.add("move-right");
     } else if (index === 1) {
-      blocks[index-1].classList.add("move-left");
-      blocks[index].classList.add("move-center");
-      blocks[index+1].classList.add("move-right");
+        blocks[index - 1].classList.add("move-left");
+        blocks[index].classList.add("move-center");
+        blocks[index + 1].classList.add("move-right");
     } else if (index === 2) {
-      blocks[index-2].classList.add("move-left");
-      blocks[index-1].classList.add("move-center");
-      blocks[index].classList.add("move-right");
+        blocks[index - 2].classList.add("move-left");
+        blocks[index - 1].classList.add("move-center");
+        blocks[index].classList.add("move-right");
     }
-  }
+}
 
 function clearAnimation() {
     var blocks = document.querySelectorAll(".graph");
