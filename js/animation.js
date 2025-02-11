@@ -1,9 +1,3 @@
-// switch language
-// var button = document.getElementById('button');
-// button.addEventListener('click', function () {
-//     window.location.href = 'index-ch.html';
-// });
-
 // show sidebar
 var sidebar = document.getElementById("sidebar");
 
